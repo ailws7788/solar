@@ -4,10 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SolarTech Estimator</title>
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -119,8 +116,8 @@
         return Math.ceil(size);
       }
 
-      const bucket     = getBucket(sysSize);
-      let systemCost   = priceMap[bucket];
+      const bucket   = getBucket(sysSize);
+      let systemCost = priceMap[bucket];
       if (systemCost === undefined) {
         const costPerKW = sysSize >= 10 ? 2850 :
                           sysSize >=  9 ? 3100 :
@@ -178,7 +175,7 @@
         <div id="roofMap"></div>
       `;
 
-      // 初始化地图（移除箭头和线条）
+      // 初始化地图并叠加面板
       setTimeout(() => initMap(loc, numPanels), 300);
     }
 
@@ -186,7 +183,7 @@
       const m = locText.match(/\(([-\d.]+),\s*([-\d.]+)\)/);
       if (!m) return;
       const lat = +m[1], lng = +m[2];
-      const map = L.map('roofMap').setView([lat, lng], 21);
+      const map = L.map('roofMap').setView([lat, lng], 19);
       L.tileLayer(
         'https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFjY2hlYW5nNzY4NyIsImEiOiJjbWM3ZHB0cnMwa2ozMm9xMjV6YmM1Mnc0In0.9OOlFHdyLY7SlPphMQt6XQ',
         { tileSize:512, zoomOffset:-1 }
