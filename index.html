@@ -22,7 +22,8 @@
 <body>
   <div class="container">
     <div style="text-align:center;">
-      <img src="images/logo.png" alt="SolarTech Logo" style="width:250px; height:auto; border-radius:10px; margin-bottom:10px;"/>
+      <!-- 引用根目录 logo.png -->
+      <img src="logo.png" alt="SolarTech Logo" style="width:250px; height:auto; border-radius:10px; margin-bottom:10px; display:block; margin-left:auto; margin-right:auto;"/>
       <h2>🔆 Solar Savings Estimator</h2>
     </div>
 
@@ -41,7 +42,6 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // 自动获取定位
     window.onload = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
@@ -49,12 +49,8 @@
           const lon = pos.coords.longitude.toFixed(6);
           fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
             .then(r => r.json())
-            .then(d => {
-              document.getElementById("location").value = `(${lat}, ${lon}) ` + (d.display_name || "");
-            })
-            .catch(() => {
-              document.getElementById("location").value = `(${lat}, ${lon})`;
-            });
+            .then(d => document.getElementById("location").value = `(${lat}, ${lon}) ` + (d.display_name || ""))
+            .catch(() => document.getElementById("location").value = `(${lat}, ${lon})`);
         });
       }
     };
@@ -71,13 +67,10 @@
       if (sysSize >= lb + 0.23) sysSize = lb + 1;
 
       const priceMap = {4:16000,5:17500,6:18500,7:20500,8:21500,9:23000,10:25000,11:27000,12:29500,13:31500,14:33500,15:34500,16:36000,17:37500,18:38500};
-      function getBucket(size) { for (let n=4; n<=18; n++) if (size <= n+0.5) return n; return Math.ceil(size); }
-      const bucket     = getBucket(sysSize);
-      let systemCost   = priceMap[bucket];
-      if (systemCost === undefined) {
-        const costPerKW = sysSize>=10?2850: sysSize>=9?3100: sysSize>=8?3400: sysSize>=7?3600:sysSize>=6?4000:4500;
-        systemCost = sysSize * costPerKW;
-      }
+      const getBucket = size => { for (let n=4; n<=18; n++) if (size <= n+0.5) return n; return Math.ceil(size); };
+      const bucket = getBucket(sysSize);
+      let systemCost = priceMap[bucket];
+      if (systemCost === undefined) { const costPerKW = sysSize>=10?2850:sysSize>=9?3100:sysSize>=8?3400:sysSize>=7?3600:sysSize>=6?4000:4500; systemCost = sysSize*costPerKW; }
 
       const estCost   = "RM " + systemCost.toLocaleString("en-MY");
       const panelKW   = 0.62;
@@ -85,8 +78,7 @@
       const roofSpace = (numPanels * 4 * 8).toFixed(0);
 
       document.getElementById("formArea").style.display = "none";
-      const out = document.getElementById("output");
-      out.style.display = "block";
+      const out = document.getElementById("output"); out.style.display = "block";
       out.innerHTML = `
         <h3>📋 Result Summary</h3>
         <table>
@@ -96,48 +88,27 @@
           <tr><th>Estimated Monthly Usage</th><td>${kWh.toFixed(0)} kWh</td></tr>
           <tr><th>Inverter Size</th><td>${sysSize.toFixed(2)} kW</td></tr>
           <tr><th># of 620W Panels</th><td>${numPanels} units</td></tr>
-          <tr><th>Daily Production</th>
-            <td style="color:green;font-weight:bold;">≈ ${numPanels}×0.62×4 = ${(numPanels*0.62*4).toFixed(2)} kWh/day</td>
-          </tr>
-          <tr><th>Monthly Savings</th>
-            <td style="color:green;font-weight:bold;">≈ ${(numPanels*0.62*4*30).toFixed(2)} kWh/month ≈ RM ${(numPanels*0.62*4*30*0.5).toFixed(2)}</td>
-          </tr>
+          <tr><th>Daily Production</th><td style="color:green;font-weight:bold;">≈ ${numPanels}×0.62×4 = ${(numPanels*0.62*4).toFixed(2)} kWh/day</td></tr>
+          <tr><th>Monthly Savings</th><td style="color:green;font-weight:bold;">≈ ${(numPanels*0.62*4*30).toFixed(2)} kWh/month ≈ RM ${(numPanels*0.62*4*30*0.5).toFixed(2)}</td></tr>
           <tr><th>Roof Space</th><td>${roofSpace} sq ft</td></tr>
           <tr><th>Est. System Cost</th><td style="color:#cc3300;font-weight:bold;">${estCost}</td></tr>
-          <tr><td colspan="2">
-            <div style="margin-top:12px;padding:12px;background:#eaf4ff;border:1px solid #0077cc;border-radius:10px;text-align:center;font-size:16px;color:#004080;">
-              📞 Solar Consultant:<br><span style="font-size:17px;color:#0077cc;">Ming Wai 📱 016-553-7788</span>
-            </div>
-          </td></tr>
+          <tr><td colspan="2"><div style="margin-top:12px;padding:12px;background:#eaf4ff;border:1px solid #0077cc;border-radius:10px;text-align:center;font-size:16px;color:#004080;">📞 Solar Consultant:<br><span style="font-size:17px;color:#0077cc;">Ming Wai 📱 016-553-7788</span></div></td></tr>
         </table>
         <div id="roofMap"></div>
       `;
-
       setTimeout(() => initMap(loc, numPanels), 300);
     }
 
     function initMap(locText, total) {
-      const m = locText.match(/\(([-\d.]+),\s*([-\d.]+)\)/);
-      if (!m) return;
+      const m = locText.match(/\(([-\d.]+),\s*([-\d.]+)\)/); if (!m) return;
       const lat = +m[1], lng = +m[2];
       const map = L.map('roofMap').setView([lat, lng], 19);
-      L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFjY2hlYW5nNzY4NyIsImEiOiJjbWM3ZHB0cnMwa2ozMm9xMjV6YmM1Mnc0In0.9OOlFHdyLY7SlPphMQt6XQ',{ tileSize:512, zoomOffset:-1 }).addTo(map);
-
-      // Add marker "Your Roof"
-      L.marker([lat, lng]).addTo(map).bindPopup('Your Roof').openPopup();
+      L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFjY2hlYW5nNzY4NyIsImEiOiJjbWM3ZHB0cnMwa2ozMm9xMjV6YmM1Mnc0In0.9OOlFHdyLY7SlPphMQt6XQ',{tileSize:512,zoomOffset:-1}).addTo(map);
 
       // Panel overlay
       const dLat=0.00006, dLng=0.00006, perRow=2, rows=Math.ceil(total/perRow);
-      for (let r=0; r<rows; r++) {
-        for (let c=0; c<perRow; c++) {
-          const idx=r*perRow+c; if(idx>=total) break;
-          const olat=lat - r*dLat; const olng=lng + c*dLng;
-          L.imageOverlay('images/overlay.png', [[olat, olng], [olat+dLat, olng+dLng]],{opacity:0.9}).addTo(map);
-        }
-      }
-
-      map.scrollWheelZoom.enable();
-      L.control.zoom({position:'topright'}).addTo(map);
+      for (let r=0; r<rows; r++) for (let c=0; c<perRow; c++) { const idx=r*perRow+c; if(idx>=total) break; const olat=lat-r*dLat, olng=lng+c*dLng; L.imageOverlay('overlay.png'? 'images/overlay.png':'overlay.png',[[olat,olng],[olat+dLat,olng+dLng]],{opacity:0.9}).addTo(map);}      
+      map.scrollWheelZoom.enable(); L.control.zoom({position:'topright'}).addTo(map);
     }
   </script>
 </body>
