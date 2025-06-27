@@ -6,49 +6,23 @@
   <title>SolarTech Estimator</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f1f8fc;
-      padding: 20px;
-      color: #333;
-    }
-    .container {
-      max-width: 700px;
-      margin: auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
+    body { font-family: 'Segoe UI', sans-serif; background: #f1f8fc; padding: 20px; color: #333; }
+    .container { max-width: 700px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     h2 { text-align: center; color: #0077cc; margin-bottom: 20px; }
     label, input, button { display: block; width: 100%; margin-top: 10px; font-size: 16px; }
-    input {
-      padding: 10px; margin-bottom: 15px;
-      border: 1px solid #ccc; border-radius: 6px;
-    }
-    button {
-      background: #0077cc; color: #fff;
-      padding: 12px; border: none; border-radius: 6px;
-      cursor: pointer;
-    }
+    input { padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; }
+    button { background: #0077cc; color: #fff; padding: 12px; border: none; border-radius: 6px; cursor: pointer; }
     #output { display: none; margin-top: 30px; font-size: 16px; }
-    table {
-      width: 100%; border-collapse: collapse; margin-top: 15px;
-    }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     th, td { padding: 10px; border: 1px solid #ddd; }
     th { background: #f4f4f4; text-align: left; }
-    #roofMap {
-      height: 400px; width: 100%;
-      border: 1px solid #ccc; border-radius: 8px;
-      margin-top: 20px;
-    }
+    #roofMap { height: 400px; width: 100%; border: 1px solid #ccc; border-radius: 8px; margin-top: 20px; }
   </style>
 </head>
 <body>
   <div class="container">
     <div style="text-align:center;">
-      <img src="images/logo.png" alt="SolarTech Logo"
-           style="width:250px; height:auto; border-radius:10px; margin-bottom:10px;"/>
+      <img src="images/logo.png" alt="SolarTech Logo" style="width:250px; height:auto; border-radius:10px; margin-bottom:10px;"/>
       <h2>🔆 Solar Savings Estimator</h2>
     </div>
 
@@ -76,8 +50,7 @@
           fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
             .then(r => r.json())
             .then(d => {
-              document.getElementById("location").value =
-                `(${lat}, ${lon}) ` + (d.display_name || "");
+              document.getElementById("location").value = `(${lat}, ${lon}) ` + (d.display_name || "");
             })
             .catch(() => {
               document.getElementById("location").value = `(${lat}, ${lon})`;
@@ -90,40 +63,19 @@
       const cust = document.getElementById("customer").value || "N/A";
       const loc  = document.getElementById("location").value || "N/A";
       const bill = parseFloat(document.getElementById("bill").value);
-      if (isNaN(bill) || bill <= 0) {
-        alert("Please enter a valid bill amount.");
-        return;
-      }
+      if (isNaN(bill) || bill <= 0) { alert("Please enter a valid bill amount."); return; }
 
-      // 基础计算
-      const kWh    = bill / 0.5;
-      let sysSize  = kWh / 130;
-      const lb     = Math.floor(sysSize);
+      const kWh   = bill / 0.5;
+      let sysSize = kWh / 130;
+      const lb    = Math.floor(sysSize);
       if (sysSize >= lb + 0.23) sysSize = lb + 1;
 
-      // 系统总价列表
-      const priceMap = {
-        4: 16000, 5: 17500, 6: 18500, 7: 20500,
-        8: 21500, 9: 23000, 10: 25000, 11: 27000,
-        12: 29500, 13: 31500, 14: 33500, 15: 34500,
-        16: 36000, 17: 37500, 18: 38500
-      };
-
-      function getBucket(size) {
-        for (let n = 4; n <= 18; n++) {
-          if (size <= n + 0.5) return n;
-        }
-        return Math.ceil(size);
-      }
-
-      const bucket   = getBucket(sysSize);
-      let systemCost = priceMap[bucket];
+      const priceMap = {4:16000,5:17500,6:18500,7:20500,8:21500,9:23000,10:25000,11:27000,12:29500,13:31500,14:33500,15:34500,16:36000,17:37500,18:38500};
+      function getBucket(size) { for (let n=4; n<=18; n++) if (size <= n+0.5) return n; return Math.ceil(size); }
+      const bucket     = getBucket(sysSize);
+      let systemCost   = priceMap[bucket];
       if (systemCost === undefined) {
-        const costPerKW = sysSize >= 10 ? 2850 :
-                          sysSize >=  9 ? 3100 :
-                          sysSize >=  8 ? 3400 :
-                          sysSize >=  7 ? 3600 :
-                          sysSize >=  6 ? 4000 : 4500;
+        const costPerKW = sysSize>=10?2850: sysSize>=9?3100: sysSize>=8?3400: sysSize>=7?3600:sysSize>=6?4000:4500;
         systemCost = sysSize * costPerKW;
       }
 
@@ -145,29 +97,16 @@
           <tr><th>Inverter Size</th><td>${sysSize.toFixed(2)} kW</td></tr>
           <tr><th># of 620W Panels</th><td>${numPanels} units</td></tr>
           <tr><th>Daily Production</th>
-            <td style="color:green;font-weight:bold;">
-              ≈ ${numPanels}×0.62×4 = ${(numPanels*0.62*4).toFixed(2)} kWh/day
-            </td>
+            <td style="color:green;font-weight:bold;">≈ ${numPanels}×0.62×4 = ${(numPanels*0.62*4).toFixed(2)} kWh/day</td>
           </tr>
           <tr><th>Monthly Savings</th>
-            <td style="color:green;font-weight:bold;">
-              ≈ ${(numPanels*0.62*4*30).toFixed(2)} kWh/month ≈ RM ${(numPanels*0.62*4*30*0.5).toFixed(2)}
-            </td>
+            <td style="color:green;font-weight:bold;">≈ ${(numPanels*0.62*4*30).toFixed(2)} kWh/month ≈ RM ${(numPanels*0.62*4*30*0.5).toFixed(2)}</td>
           </tr>
           <tr><th>Roof Space</th><td>${roofSpace} sq ft</td></tr>
-          <tr><th>Est. System Cost</th>
-            <td style="color:#cc3300;font-weight:bold;">${estCost}</td>
-          </tr>
+          <tr><th>Est. System Cost</th><td style="color:#cc3300;font-weight:bold;">${estCost}</td></tr>
           <tr><td colspan="2">
-            <div style="
-              margin-top:12px;padding:12px;
-              background:#eaf4ff;border:1px solid #0077cc;
-              border-radius:10px;text-align:center;
-              font-size:16px;color:#004080;">
-              📞 Speak with our Solar Consultant:<br>
-              <span style="font-size:17px;color:#0077cc;">
-                Ming Wai 📱 016-553-7788
-              </span>
+            <div style="margin-top:12px;padding:12px;background:#eaf4ff;border:1px solid #0077cc;border-radius:10px;text-align:center;font-size:16px;color:#004080;">
+              📞 Solar Consultant:<br><span style="font-size:17px;color:#0077cc;">Ming Wai 📱 016-553-7788</span>
             </div>
           </td></tr>
         </table>
@@ -182,23 +121,18 @@
       if (!m) return;
       const lat = +m[1], lng = +m[2];
       const map = L.map('roofMap').setView([lat, lng], 19);
-      L.tileLayer(
-        'https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFjY2hlYW5nNzY4NyIsImEiOiJjbWM3ZHB0cnMwa2ozMm9xMjV6YmM1Mnc0In0.9OOlFHdyLY7SlPphMQt6XQ',
-        { tileSize:512, zoomOffset:-1 }
-      ).addTo(map);
+      L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFjY2hlYW5nNzY4NyIsImEiOiJjbWM3ZHB0cnMwa2ozMm9xMjV6YmM1Mnc0In0.9OOlFHdyLY7SlPphMQt6XQ',{ tileSize:512, zoomOffset:-1 }).addTo(map);
 
-      // 面板叠加
-      const dLat = 0.00006, dLng = 0.00006, perRow = 2, rows = Math.ceil(total / perRow);
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < perRow; c++) {
-          const idx = r * perRow + c;
-          if (idx >= total) break;
-          const olat = lat - r * dLat;
-          const olng = lng + c * dLng;
-          L.imageOverlay('images/overlay.png',
-            [[olat, olng], [olat + dLat, olng + dLng]],
-            {opacity:0.9}
-          ).addTo(map);
+      // Add marker "Your Roof"
+      L.marker([lat, lng]).addTo(map).bindPopup('Your Roof').openPopup();
+
+      // Panel overlay
+      const dLat=0.00006, dLng=0.00006, perRow=2, rows=Math.ceil(total/perRow);
+      for (let r=0; r<rows; r++) {
+        for (let c=0; c<perRow; c++) {
+          const idx=r*perRow+c; if(idx>=total) break;
+          const olat=lat - r*dLat; const olng=lng + c*dLng;
+          L.imageOverlay('images/overlay.png', [[olat, olng], [olat+dLat, olng+dLng]],{opacity:0.9}).addTo(map);
         }
       }
 
