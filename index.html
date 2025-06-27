@@ -112,7 +112,6 @@
         16: 36000, 17: 37500, 18: 38500
       };
 
-      // 根据区间判断对应档位
       function getBucket(size) {
         for (let n = 4; n <= 18; n++) {
           if (size <= n + 0.5) return n;
@@ -122,7 +121,6 @@
 
       const bucket     = getBucket(sysSize);
       let systemCost   = priceMap[bucket];
-      // 如果超出18 kW，仍按原动态逻辑计算
       if (systemCost === undefined) {
         const costPerKW = sysSize >= 10 ? 2850 :
                           sysSize >=  9 ? 3100 :
@@ -138,7 +136,6 @@
       const numPanels = Math.ceil(sysSize / panelKW);
       const roofSpace = (numPanels * 4 * 8).toFixed(0);
 
-      // 显示结果
       document.getElementById("formArea").style.display = "none";
       const out = document.getElementById("output");
       out.style.display = "block";
@@ -181,7 +178,7 @@
         <div id="roofMap"></div>
       `;
 
-      // 初始化地图
+      // 初始化地图（移除箭头和线条）
       setTimeout(() => initMap(loc, numPanels), 300);
     }
 
@@ -194,21 +191,6 @@
         'https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFjY2hlYW5nNzY4NyIsImEiOiJjbWM3ZHB0cnMwa2ozMm9xMjV6YmM1Mnc0In0.9OOlFHdyLY7SlPphMQt6XQ',
         { tileSize:512, zoomOffset:-1 }
       ).addTo(map);
-
-      // 南北指示
-      const north = [lat + 0.0005, lng];
-      const south = [lat - 0.0005, lng];
-      L.polyline([south,north], {color:'red', weight:2, dashArray:'5,5'}).addTo(map);
-      L.marker(north, {
-        icon: L.divIcon({className:'arrow-labels',
-          html: '<div style="font-size:28px;font-weight:bold;color:black;">↑</div>'
-        })
-      }).addTo(map);
-      L.marker(south, {
-        icon: L.divIcon({className:'arrow-labels',
-          html: '<div style="font-size:28px;font-weight:bold;color:black;">↓</div>'
-        })
-      }).addTo(map);
 
       // 面板叠加
       const dLat = 0.00006, dLng = 0.00006, perRow = 2, rows = Math.ceil(total / perRow);
